@@ -25,6 +25,7 @@ impl Spans {
         )
         .unwrap();
         for (i, line) in self.dat.iter().enumerate() {
+            let index = i + 1;
             let from = line.from;
             let to = line.to;
             let from_sec = from as f64 / fps;
@@ -32,7 +33,7 @@ impl Spans {
             let dur_frames = to - from;
             let dur_seconds = to_sec - from_sec;
             writeln!(&mut paper,
-                "{i}{sep}{from}{sep}{to}{sep}{from_sec}{sep}{to_sec}{sep}{dur_frames}{sep}{dur_seconds}"
+                "{index}{sep}{from}{sep}{to}{sep}{from_sec}{sep}{to_sec}{sep}{dur_frames}{sep}{dur_seconds}"
                 ).unwrap();
         }
     }
