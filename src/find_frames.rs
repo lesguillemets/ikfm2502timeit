@@ -53,7 +53,7 @@ impl Matcher {
         while let Ok(b) = vc.read(&mut frame)
             && b
         {
-            scores.push(self.check_frame(&frame).unwrap());
+            scores.push(self.check_frame(&frame).expect("check_frame.unwrap"));
         }
         scores
     }
