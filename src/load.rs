@@ -32,3 +32,26 @@ pub fn load_video(f: &str) -> Result<(VideoCapture, usize), LoadVideoError> {
         Err(LoadVideoError::NoFrameError)
     }
 }
+
+pub fn load_report(f: &str) -> Option<VideoCapture> {
+    match load_video(f) {
+        Ok((mut vc, frame_count)) => {
+            eprintln!("ready to process video with {frame_count} frames");
+            Some(vc)
+        }
+        Err(LoadVideoError::OpenCVError(oce)) => {
+            eprintln!("Error on opencv: {:?}", oce);
+            None
+        }
+        Err(LoadVideoError::NoFrameError) => {
+            eprintln!(
+                "error: CAP_PROP_FRAME_COUNT didn't return positive number; maybe not a video"
+            );
+            None
+        }
+        Err(LoadVideoError::FileNotFoundError) => {
+            eprintln!("file not found");
+            None
+        }
+    }
+}
