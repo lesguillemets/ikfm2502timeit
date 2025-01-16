@@ -27,8 +27,8 @@ impl Spans {
         for (i, line) in self.dat.iter().enumerate() {
             let from = line.from;
             let to = line.to;
-            let from_sec = from as f64 * fps;
-            let to_sec = to as f64 * fps;
+            let from_sec = from as f64 / fps;
+            let to_sec = to as f64 / fps;
             let dur_frames = to - from;
             let dur_seconds = to_sec - from_sec;
             writeln!(&mut paper,
