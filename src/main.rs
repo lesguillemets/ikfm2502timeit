@@ -1,7 +1,13 @@
 use clap::{Parser, Subcommand};
+use ikfm2502timeit::consts;
 use ikfm2502timeit::find_frames::do_find_frames;
 use ikfm2502timeit::load::load_report;
 use ikfm2502timeit::prepare::prepare;
+use ikfm2502timeit::Spans;
+
+use std::fs;
+use std::io::prelude::*;
+use std::io::BufWriter;
 use std::process::ExitCode;
 
 #[derive(Parser, Debug)]
@@ -37,10 +43,12 @@ fn main() -> ExitCode {
             prepare(&mut vc, *sec);
         }
         Commands::Process => {
-            let scores = do_find_frames(&mut vc);
-            for (i, score) in scores.iter().enumerate() {
-                println!("{i}\t{score}");
-            }
+            let frames = do_find_frames(&mut vc);
+            let spans = Spans::from_bools(&frames);
+            let outname = format!("{}.result.csv", &cli.file);
+            let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
+            spans.report(&mut f, consts::DEFAULT_FPS, None);
+            f.flush().unwrap();
         }
     }
     ExitCode::SUCCESS

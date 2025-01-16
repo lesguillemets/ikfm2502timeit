@@ -1,20 +1,77 @@
 #![feature(let_chains)]
 
+use std::io::Write;
+
 pub mod consts;
 pub mod find_frames;
 pub mod load;
 pub mod prepare;
 
-use opencv::prelude::*;
-use opencv::videoio::VideoCapture;
-use std::process::ExitCode;
+pub struct Span {
+    from: usize,
+    to: usize,
+}
 
-fn find_the_frames(vc: &mut VideoCapture) -> Vec<(usize, usize)> {
-    let mut frame = Mat::default();
-    // while let Ok(b) = vc.read(&mut frame)
-    //     && b
-    // {
-    //     println!("{frame:?}");
-    // }
-    vec![]
+pub struct Spans {
+    dat: Vec<Span>,
+}
+
+impl Spans {
+    pub fn report<W: Write>(&self, mut paper: &mut W, fps: f64, sep: Option<&str>) {
+        let sep = sep.unwrap_or(",");
+        writeln!(
+            &mut paper,
+            "i{sep}from{sep}to{sep}from_sec{sep}to_sec{sep}dur_frames{sep}dur_seconds"
+        )
+        .unwrap();
+        for (i, line) in self.dat.iter().enumerate() {
+            let from = line.from;
+            let to = line.to;
+            let from_sec = from as f64 * fps;
+            let to_sec = to as f64 * fps;
+            let dur_frames = to - from;
+            let dur_seconds = to_sec - from_sec;
+            writeln!(&mut paper,
+                "{i}{sep}{from}{sep}{to}{sep}{from_sec}{sep}{to_sec}{sep}{dur_frames}{sep}{dur_seconds}"
+                ).unwrap();
+        }
+    }
+
+    pub fn from_bools(from: &[bool]) -> Self {
+        if from.is_empty() {
+            return Spans { dat: vec![] };
+        }
+        let mut spans = vec![];
+        let mut current = from[0];
+        let mut last_index = 0;
+        for (i, &b) in from.iter().enumerate() {
+            match (current, b) {
+                // span の終わり
+                (true, false) => {
+                    spans.push(Span {
+                        from: last_index,
+                        to: i - 1,
+                    });
+                }
+                // span のはじまり}
+                (false, true) => {
+                    last_index = i;
+                }
+                // 関係ないところ
+                (false, false) => (),
+                // span の途中
+                (true, true) => (),
+            }
+            current = b;
+        }
+        if current {
+            spans.push({
+                Span {
+                    from: last_index,
+                    to: from.len(),
+                }
+            })
+        }
+        Spans { dat: spans }
+    }
 }

@@ -54,7 +54,20 @@ impl Matcher {
         match_shapes(&self.tmpl, &gs_roi, self.match_method as i32, 0.0)
     }
 
-    fn check_video(&self, vc: &mut VideoCapture) -> Vec<f64> {
+    /// true if that frame matches
+    fn check_video(&self, vc: &mut VideoCapture) -> Vec<bool> {
+        let mut isvas = vec![];
+        let mut frame = Mat::default();
+        while let Ok(b) = vc.read(&mut frame)
+            && b
+        {
+            let score = self.check_frame(&frame).expect("check_frame.unwrap");
+            isvas.push(score < consts::MATCH_SHAPES_THRESHOLD);
+        }
+        isvas
+    }
+
+    fn make_video_scores(&self, vc: &mut VideoCapture) -> Vec<f64> {
         let mut scores = vec![];
         let mut frame = Mat::default();
         while let Ok(b) = vc.read(&mut frame)
@@ -66,7 +79,7 @@ impl Matcher {
     }
 }
 
-pub fn do_find_frames(vc: &mut VideoCapture) -> Vec<f64> {
+pub fn do_find_frames(vc: &mut VideoCapture) -> Vec<bool> {
     let matcher = Matcher::from_file(consts::TEMPL_FILE).unwrap_or_else(|_| panic!("dff:matcher"));
     matcher.check_video(vc)
 }
