@@ -37,7 +37,10 @@ fn main() -> ExitCode {
             prepare(&mut vc, *sec);
         }
         Commands::Process => {
-            load_report(&cli.file);
+            let scores = do_find_frames(&mut vc);
+            for (i, score) in scores.iter().enumerate() {
+                println!("{i}\t{score}");
+            }
         }
     }
     ExitCode::SUCCESS
