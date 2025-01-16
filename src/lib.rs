@@ -1,6 +1,7 @@
 #![feature(let_chains)]
 
 pub mod consts;
+pub mod find_frames;
 pub mod load;
 pub mod prepare;
 
