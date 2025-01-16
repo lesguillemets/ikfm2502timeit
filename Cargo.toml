@@ -1,0 +1,8 @@
+[package]
+name = "ikfm2502timeit"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.26", features = ["derive"] }
+opencv = "0.94.1"
