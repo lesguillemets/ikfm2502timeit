@@ -1,5 +1,6 @@
 use clap::Parser;
-use ikfm2502timeit::do_load;
+use ikfm2502timeit::load::load_video;
+use ikfm2502timeit::prepare::prepare;
 use std::process::ExitCode;
 
 #[derive(Parser, Debug)]
@@ -10,8 +11,9 @@ struct Args {
     file: String,
 }
 
-fn main() -> ExitCode {
+fn main() {
     let args = Args::parse();
-    println!("{args:?}");
-    do_load(&args.file)
+    if let Ok(mut cv) = load_video(&args.file) {
+        prepare(&mut cv.0, 18.0);
+    }
 }

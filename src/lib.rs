@@ -1,6 +1,8 @@
 #![feature(let_chains)]
 
-mod load;
+pub mod consts;
+pub mod load;
+pub mod prepare;
 
 use opencv::prelude::*;
 use opencv::videoio::VideoCapture;
