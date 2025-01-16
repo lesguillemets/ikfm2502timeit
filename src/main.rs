@@ -1,6 +1,5 @@
 use clap::{Parser, Subcommand};
-use ikfm2502timeit::do_load;
-use ikfm2502timeit::load::load_video;
+use ikfm2502timeit::load_report;
 use ikfm2502timeit::prepare::prepare;
 use std::process::ExitCode;
 
@@ -12,7 +11,7 @@ struct Cli {
     file: String,
 
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
@@ -25,17 +24,20 @@ enum Commands {
     Process,
 }
 
-fn main() {
+fn main() -> ExitCode {
     let cli = Cli::parse();
-    match &cli.command {
-        Some(Commands::Prepare { sec }) => {
-            if let Ok(mut cv) = load_video(&cli.file) {
-                prepare(&mut cv.0, *sec);
-            }
-        }
-        Some(Commands::Process) => {
-            do_load(&cli.file);
-        }
-        None => {}
+    let loaded = load_report(&cli.file);
+    if loaded.is_none() {
+        return ExitCode::FAILURE;
     }
+    let mut vc = loaded.unwrap();
+    match &cli.command {
+        Commands::Prepare { sec } => {
+            prepare(&mut vc, *sec);
+        }
+        Commands::Process => {
+            load_report(&cli.file);
+        }
+    }
+    ExitCode::SUCCESS
 }

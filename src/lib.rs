@@ -10,26 +10,25 @@ use std::process::ExitCode;
 
 use crate::load::{load_video, LoadVideoError};
 
-pub fn do_load(f: &str) -> ExitCode {
+pub fn load_report(f: &str) -> Option<VideoCapture> {
     match load_video(f) {
         Ok((mut vc, frame_count)) => {
             eprintln!("ready to process video with {frame_count} frames");
-            let frames = find_the_frames(&mut vc);
-            ExitCode::SUCCESS
+            Some(vc)
         }
         Err(LoadVideoError::OpenCVError(oce)) => {
             eprintln!("Error on opencv: {:?}", oce);
-            ExitCode::FAILURE
+            None
         }
         Err(LoadVideoError::NoFrameError) => {
             eprintln!(
                 "error: CAP_PROP_FRAME_COUNT didn't return positive number; maybe not a video"
             );
-            ExitCode::FAILURE
+            None
         }
         Err(LoadVideoError::FileNotFoundError) => {
             eprintln!("file not found");
-            ExitCode::FAILURE
+            None
         }
     }
 }
