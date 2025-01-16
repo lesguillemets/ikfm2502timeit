@@ -1,5 +1,5 @@
 use clap::Parser;
-use ikfm2502timeit::load;
+use ikfm2502timeit::do_load;
 use std::process::ExitCode;
 
 #[derive(Parser, Debug)]
@@ -13,5 +13,5 @@ struct Args {
 fn main() -> ExitCode {
     let args = Args::parse();
     println!("{args:?}");
-    load(&args.file)
+    do_load(&args.file)
 }
