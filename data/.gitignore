@@ -1,5 +1,2 @@
-*.mp4
-*.mov
-*.tsv
-*.jpg
-*.png
+*
+!.gitignore
