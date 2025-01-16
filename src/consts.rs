@@ -8,7 +8,7 @@ pub const VA_ROI_H: i32 = 50;
 pub const TEMPL_FILE: &str = "./data/va_roi.png";
 
 /// match_shapes(&tmpl, &roi, *,*) の閾値
-pub const MATCH_SHAPES_THRESHOLD: f64 = 0.001;
+pub const MATCH_SHAPES_THRESHOLD: f64 = 0.005;
 
 /// デフォルトのFPS. 本来はファイルが持ってる情報だが，
 /// 取り直すのが面倒なこともあるので…
