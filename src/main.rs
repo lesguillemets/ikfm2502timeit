@@ -43,28 +43,34 @@ enum Commands {
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    let files;
+    let files: Vec<String>;
     if let Some(f) = &cli.file_or_dir.file {
         files = vec![f.clone()];
     } else {
-        files = fs::read_dir(&cli.file_or_dir.dir.as_ref().unwrap())
+        let dir_name: &str = cli.file_or_dir.dir.as_deref().unwrap();
+        files = fs::read_dir(dir_name)
             .unwrap()
-            .map(|e| e.unwrap().file_name().into_string().unwrap())
+            .map(|e| dir_name.to_string() + &e.unwrap().file_name().into_string().unwrap())
             .collect();
     }
-    let mut loaded: Vec<VideoCapture> = files.iter().filter_map(|f| load_report(f)).collect();
-    if loaded.len() == 0 {
+    println!("{files:?}");
+    let mut loaded: Vec<(VideoCapture, String)> = files
+        .iter()
+        .zip(files.iter().cloned())
+        .filter_map(|(f, name)| Some((load_report(f)?, name)))
+        .collect();
+    if loaded.is_empty() {
         return ExitCode::FAILURE;
     }
-    for mut vc in &mut loaded {
+    for (vc, file_name) in &mut loaded {
         match &cli.command {
             Commands::Prepare { sec } => {
-                prepare(&mut vc, *sec);
+                prepare(vc, *sec);
             }
             Commands::Process => {
-                let frames = do_find_frames(&mut vc);
+                let frames = do_find_frames(vc);
                 let spans = Spans::from_bools(&frames);
-                let outname = format!("{}.result.csv", &cli.file_or_dir.file.clone().unwrap());
+                let outname = format!("{}.result.csv", &file_name);
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
                 f.flush().unwrap();
