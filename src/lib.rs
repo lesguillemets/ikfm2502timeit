@@ -5,6 +5,7 @@ use std::io::Write;
 pub mod consts;
 pub mod find_frames;
 pub mod load;
+pub mod match_bw;
 pub mod prepare;
 
 pub struct Span {

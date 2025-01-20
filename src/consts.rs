@@ -10,6 +10,9 @@ pub const TEMPL_FILE: &str = "./data/va_roi.png";
 /// match_shapes(&tmpl, &roi, *,*) の閾値
 pub const MATCH_SHAPES_THRESHOLD: f64 = 0.005;
 
+/// 2値化して，見比べて，異なるピクセルがこれ以下ならOK
+pub const MATCH_BW_THRESHOLD: f64 = 50.0;
+
 /// デフォルトのFPS. 本来はファイルが持ってる情報だが，
 /// 取り直すのが面倒なこともあるので…
 pub const DEFAULT_FPS: f64 = 30.0;
