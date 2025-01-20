@@ -1,4 +1,5 @@
 use clap::{ArgGroup, Args, Parser, Subcommand};
+use glob::glob;
 use ikfm2502timeit::consts;
 use ikfm2502timeit::find_frames::do_find_frames;
 use ikfm2502timeit::load::load_report;
@@ -48,18 +49,23 @@ fn main() -> ExitCode {
         files = vec![f.clone()];
     } else {
         let dir_name: &str = cli.file_or_dir.dir.as_deref().unwrap();
-        files = fs::read_dir(dir_name)
+        // `.mov` は仮定する．
+        files = glob(&format!("{dir_name}/*.mov"))
             .unwrap()
-            .map(|e| dir_name.to_string() + &e.unwrap().file_name().into_string().unwrap())
+            .map(|e| {
+                dir_name.to_string() + e.unwrap().as_path().file_name().unwrap().to_str().unwrap()
+            })
             .collect();
     }
-    println!("{files:?}");
+    eprintln!("{files:?}");
     let mut loaded: Vec<(VideoCapture, String)> = files
         .iter()
         .zip(files.iter().cloned())
+        // ここで video 以外ははじけてると思うんだけど
         .filter_map(|(f, name)| Some((load_report(f)?, name)))
         .collect();
     if loaded.is_empty() {
+        eprintln!("no file loaded");
         return ExitCode::FAILURE;
     }
     for (vc, file_name) in &mut loaded {
