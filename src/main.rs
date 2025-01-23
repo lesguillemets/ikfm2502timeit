@@ -84,7 +84,11 @@ fn main() -> ExitCode {
                     do_find_frames(vc, &None)
                 };
                 let spans = Spans::from_bools(&frames);
-                let outname = format!("{}.result.csv", &file_name);
+                let outname = if *use_bw {
+                    format!("{}.bw.result.csv", &file_name)
+                } else {
+                    format!("{}.ms.result.csv", &file_name)
+                };
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
                 f.flush().unwrap();
