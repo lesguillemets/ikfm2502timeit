@@ -42,7 +42,7 @@ enum Commands {
     },
     Process {
         #[arg(long)]
-        use_bw: bool,
+        use_match_shapes: bool,
     },
 }
 
@@ -77,17 +77,17 @@ fn main() -> ExitCode {
             Commands::Prepare { sec } => {
                 prepare(vc, *sec);
             }
-            Commands::Process { use_bw } => {
-                let frames = if *use_bw {
-                    match_bw::do_find_frames(vc, &None)
-                } else {
+            Commands::Process { use_match_shapes } => {
+                let frames = if *use_match_shapes {
                     do_find_frames(vc, &None)
+                } else {
+                    match_bw::do_find_frames(vc, &None)
                 };
                 let spans = Spans::from_bools(&frames);
-                let outname = if *use_bw {
-                    format!("{}.bw.result.csv", &file_name)
-                } else {
+                let outname = if *use_match_shapes {
                     format!("{}.ms.result.csv", &file_name)
+                } else {
+                    format!("{}.bw.result.csv", &file_name)
                 };
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
