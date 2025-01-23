@@ -74,7 +74,7 @@ fn main() -> ExitCode {
                 prepare(vc, *sec);
             }
             Commands::Process => {
-                let frames = do_find_frames(vc);
+                let frames = do_find_frames(vc, &None);
                 let spans = Spans::from_bools(&frames);
                 let outname = format!("{}.result.csv", &file_name);
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());

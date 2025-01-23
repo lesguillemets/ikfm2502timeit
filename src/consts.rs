@@ -8,7 +8,7 @@ pub const VA_ROI_H: i32 = 50;
 pub const TEMPL_FILE: &str = "./data/va_roi.png";
 
 /// match_shapes(&tmpl, &roi, *,*) の閾値
-pub const MATCH_SHAPES_THRESHOLD: f64 = 0.005;
+pub const MATCH_SHAPES_THRESHOLD: f64 = 0.05;
 
 /// 2値化して，見比べて，異なるピクセルがこれ以下ならOK
 pub const MATCH_BW_THRESHOLD: f64 = 300.0;
