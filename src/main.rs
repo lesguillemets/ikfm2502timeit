@@ -3,6 +3,7 @@ use glob::glob;
 use ikfm2502timeit::consts;
 use ikfm2502timeit::find_frames::do_find_frames;
 use ikfm2502timeit::load::load_report;
+use ikfm2502timeit::match_bw;
 use ikfm2502timeit::prepare::prepare;
 use ikfm2502timeit::Spans;
 use opencv::videoio::VideoCapture;
@@ -39,7 +40,10 @@ enum Commands {
         #[arg(long)]
         sec: f64,
     },
-    Process,
+    Process {
+        #[arg(long)]
+        use_bw: bool,
+    },
 }
 
 fn main() -> ExitCode {
@@ -73,10 +77,18 @@ fn main() -> ExitCode {
             Commands::Prepare { sec } => {
                 prepare(vc, *sec);
             }
-            Commands::Process => {
-                let frames = do_find_frames(vc, &None);
+            Commands::Process { use_bw } => {
+                let frames = if *use_bw {
+                    match_bw::do_find_frames(vc, &None)
+                } else {
+                    do_find_frames(vc, &None)
+                };
                 let spans = Spans::from_bools(&frames);
-                let outname = format!("{}.result.csv", &file_name);
+                let outname = if *use_bw {
+                    format!("{}.bw.result.csv", &file_name)
+                } else {
+                    format!("{}.ms.result.csv", &file_name)
+                };
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
                 f.flush().unwrap();

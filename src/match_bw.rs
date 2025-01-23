@@ -16,6 +16,7 @@ pub struct BWMatcher {
     tmpl: Mat,
 }
 
+const BW_THRESHOLD: f64 = 32.0;
 impl BWMatcher {
     fn new(tmpl: Mat) -> Self {
         BWMatcher { tmpl }
@@ -27,7 +28,7 @@ impl BWMatcher {
         threshold(
             &grayscale,
             &mut bw,
-            127.0,
+            BW_THRESHOLD,
             255.0,
             ThresholdTypes::THRESH_BINARY as i32,
         )?;
@@ -56,7 +57,7 @@ impl BWMatcher {
         threshold(
             &gs_roi,
             &mut bw_roi,
-            127.0,
+            BW_THRESHOLD,
             255.0,
             ThresholdTypes::THRESH_BINARY as i32,
         )?;
@@ -67,20 +68,22 @@ impl BWMatcher {
     }
 
     /// true if that frame matches
-    fn check_video(&self, vc: &mut VideoCapture) -> Vec<bool> {
+    fn check_video(&self, vc: &mut VideoCapture, threshold: &Option<f64>) -> Vec<bool> {
         let mut isvas = vec![];
         let mut frame = Mat::default();
+        let threshold = threshold.unwrap_or(consts::MATCH_BW_THRESHOLD);
         while let Ok(b) = vc.read(&mut frame)
             && b
         {
             let score = self.check_frame_match(&frame).expect("check_frame.unwrap");
-            isvas.push(score < consts::MATCH_BW_THRESHOLD);
+            isvas.push(score < threshold);
+            frame = Mat::default();
         }
         isvas
     }
 }
-pub fn do_find_frames(vc: &mut VideoCapture) -> Vec<bool> {
+pub fn do_find_frames(vc: &mut VideoCapture, threshold: &Option<f64>) -> Vec<bool> {
     let matcher =
         BWMatcher::from_file(consts::TEMPL_FILE).unwrap_or_else(|_| panic!("dff:matcher"));
-    matcher.check_video(vc)
+    matcher.check_video(vc, threshold)
 }
