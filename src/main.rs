@@ -1,9 +1,11 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Args, Parser, Subcommand};
+use glob::glob;
 use ikfm2502timeit::consts;
 use ikfm2502timeit::find_frames::do_find_frames;
 use ikfm2502timeit::load::load_report;
 use ikfm2502timeit::prepare::prepare;
 use ikfm2502timeit::Spans;
+use opencv::videoio::VideoCapture;
 
 use std::fs;
 use std::io::prelude::*;
@@ -14,11 +16,20 @@ use std::process::ExitCode;
 #[command(version, arg_required_else_help = true)]
 struct Cli {
     // the video file to process
-    #[arg(short, long)]
-    file: String,
+    #[clap(flatten)]
+    file_or_dir: FileOrDir,
 
     #[command(subcommand)]
     command: Commands,
+}
+
+#[derive(Debug, Args)]
+#[group(required = true, multiple = false)]
+struct FileOrDir {
+    #[arg(short, long)]
+    file: Option<String>,
+    #[arg(short, long)]
+    dir: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -33,22 +44,43 @@ enum Commands {
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    let loaded = load_report(&cli.file);
-    if loaded.is_none() {
+    let files: Vec<String>;
+    if let Some(f) = &cli.file_or_dir.file {
+        files = vec![f.clone()];
+    } else {
+        let dir_name: &str = cli.file_or_dir.dir.as_deref().unwrap();
+        // `.mov` は仮定する．
+        files = glob(&format!("{dir_name}/*.mov"))
+            .unwrap()
+            .map(|e| {
+                dir_name.to_string() + e.unwrap().as_path().file_name().unwrap().to_str().unwrap()
+            })
+            .collect();
+    }
+    eprintln!("{files:?}");
+    let mut loaded: Vec<(VideoCapture, String)> = files
+        .iter()
+        .zip(files.iter().cloned())
+        // ここで video 以外ははじけてると思うんだけど
+        .filter_map(|(f, name)| Some((load_report(f)?, name)))
+        .collect();
+    if loaded.is_empty() {
+        eprintln!("no file loaded");
         return ExitCode::FAILURE;
     }
-    let mut vc = loaded.unwrap();
-    match &cli.command {
-        Commands::Prepare { sec } => {
-            prepare(&mut vc, *sec);
-        }
-        Commands::Process => {
-            let frames = do_find_frames(&mut vc);
-            let spans = Spans::from_bools(&frames);
-            let outname = format!("{}.result.csv", &cli.file);
-            let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
-            spans.report(&mut f, consts::DEFAULT_FPS, None);
-            f.flush().unwrap();
+    for (vc, file_name) in &mut loaded {
+        match &cli.command {
+            Commands::Prepare { sec } => {
+                prepare(vc, *sec);
+            }
+            Commands::Process => {
+                let frames = do_find_frames(vc);
+                let spans = Spans::from_bools(&frames);
+                let outname = format!("{}.result.csv", &file_name);
+                let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
+                spans.report(&mut f, consts::DEFAULT_FPS, None);
+                f.flush().unwrap();
+            }
         }
     }
     ExitCode::SUCCESS
