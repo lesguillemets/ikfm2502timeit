@@ -16,6 +16,7 @@ pub struct BWMatcher {
     tmpl: Mat,
 }
 
+const BW_THRESHOLD: f64 = 32.0;
 impl BWMatcher {
     fn new(tmpl: Mat) -> Self {
         BWMatcher { tmpl }
@@ -27,7 +28,7 @@ impl BWMatcher {
         threshold(
             &grayscale,
             &mut bw,
-            127.0,
+            BW_THRESHOLD,
             255.0,
             ThresholdTypes::THRESH_BINARY as i32,
         )?;
@@ -56,7 +57,7 @@ impl BWMatcher {
         threshold(
             &gs_roi,
             &mut bw_roi,
-            127.0,
+            BW_THRESHOLD,
             255.0,
             ThresholdTypes::THRESH_BINARY as i32,
         )?;
