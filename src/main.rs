@@ -1,16 +1,20 @@
 use clap::{ArgGroup, Args, Parser, Subcommand};
 use glob::glob;
 use ikfm2502timeit::consts;
+use ikfm2502timeit::extract::get_nth_frames;
 use ikfm2502timeit::find_frames::do_find_frames;
 use ikfm2502timeit::load::load_report;
 use ikfm2502timeit::match_bw;
 use ikfm2502timeit::prepare::prepare;
 use ikfm2502timeit::Spans;
+use opencv::core::Vector;
+use opencv::imgcodecs::imwrite;
 use opencv::videoio::VideoCapture;
 
 use std::fs;
 use std::io::prelude::*;
 use std::io::BufWriter;
+use std::path::Path;
 use std::process::ExitCode;
 
 #[derive(Parser, Debug)]
@@ -44,10 +48,20 @@ enum Commands {
         #[arg(long)]
         use_match_shapes: bool,
     },
+
+    ExtractTrials {
+        #[arg(long)]
+        frames_before: usize,
+    },
+}
+
+fn to_bw_filename(file_name: &str) -> String {
+    format!("{}.bw.result.csv", &file_name)
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
+    // 扱うべき動画ファイルのリスト
     let files: Vec<String>;
     if let Some(f) = &cli.file_or_dir.file {
         files = vec![f.clone()];
@@ -87,11 +101,27 @@ fn main() -> ExitCode {
                 let outname = if *use_match_shapes {
                     format!("{}.ms.result.csv", &file_name)
                 } else {
-                    format!("{}.bw.result.csv", &file_name)
+                    to_bw_filename(file_name)
                 };
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
                 f.flush().unwrap();
+            }
+            Commands::ExtractTrials { frames_before } => {
+                // .mov を落としてディレクトリの名前とする
+                let out_dir = Path::new(&file_name[..file_name.len() - 4]);
+                fs::create_dir(out_dir).unwrap();
+                // ここにフレームを書き込むようにするわけですね．
+                let parsed = Spans::from_file(&to_bw_filename(file_name)).unwrap();
+                let frames: Vec<usize> = parsed
+                    .endframes()
+                    .iter()
+                    .map(|frame| frame - frames_before)
+                    .collect();
+                for (frame, img) in get_nth_frames(vc, &frames).unwrap() {
+                    let outfile = out_dir.join(format!("{file_name}_{frame:05}.jpg"));
+                    imwrite(outfile.to_str().unwrap(), &img, &Vector::new()).unwrap();
+                }
             }
         }
     }

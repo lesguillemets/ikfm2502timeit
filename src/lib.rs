@@ -1,18 +1,32 @@
 #![feature(let_chains)]
 
-use std::io::Write;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Write};
 
 pub mod consts;
+pub mod extract;
 pub mod find_frames;
 pub mod load;
 pub mod match_bw;
 pub mod prepare;
 
+#[derive(Debug)]
 pub struct Span {
     from: usize,
     to: usize,
 }
 
+impl Span {
+    pub fn from_line(line: &str) -> Self {
+        let dat: Vec<&str> = line.split(",").collect();
+        Span {
+            from: dat[1].parse().unwrap(),
+            to: dat[2].parse().unwrap(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Spans {
     dat: Vec<Span>,
 }
@@ -37,6 +51,17 @@ impl Spans {
                 "{index}{sep}{from}{sep}{to}{sep}{from_sec}{sep}{to_sec}{sep}{dur_frames}{sep}{dur_seconds}"
                 ).unwrap();
         }
+    }
+
+    pub fn endframes(&self) -> Vec<usize> {
+        self.dat.iter().map(|s| s.from).collect()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.dat.is_empty()
+    }
+    pub fn len(&self) -> usize {
+        self.dat.len()
     }
 
     pub fn from_bools(from: &[bool]) -> Self {
@@ -75,5 +100,17 @@ impl Spans {
             })
         }
         Spans { dat: spans }
+    }
+
+    // FIXME: use Result
+    // parse from file
+    pub fn from_file(f: &str) -> Option<Self> {
+        let reader = BufReader::new(File::open(f).ok()?);
+        let spans = reader
+            .lines()
+            .skip(1) // header
+            .filter_map(|l| Some(Span::from_line(&l.ok()?)))
+            .collect();
+        Some(Spans { dat: spans })
     }
 }
