@@ -108,9 +108,16 @@ fn main() -> ExitCode {
                 f.flush().unwrap();
             }
             Commands::ExtractTrials { frames_before } => {
+                let the_file = Path::new(&file_name);
+                let base_name: &str = the_file.file_stem().unwrap().to_str().unwrap();
                 // .mov を落としてディレクトリの名前とする
                 let out_dir = Path::new(&file_name[..file_name.len() - 4]);
-                fs::create_dir(out_dir).unwrap();
+                if out_dir.is_file() {
+                    panic!("a FILE named {out_dir:?} exists!!");
+                }
+                if !out_dir.exists() {
+                    fs::create_dir(out_dir).unwrap();
+                }
                 // ここにフレームを書き込むようにするわけですね．
                 let parsed = Spans::from_file(&to_bw_filename(file_name)).unwrap();
                 let frames: Vec<usize> = parsed
@@ -119,8 +126,10 @@ fn main() -> ExitCode {
                     .map(|frame| frame - frames_before)
                     .collect();
                 for (frame, img) in get_nth_frames(vc, &frames).unwrap() {
-                    let outfile = out_dir.join(format!("{file_name}_{frame:05}.jpg"));
+                    let outfile = out_dir.join(format!("{base_name}_{frame:05}.jpg"));
+                    eprintln!("writing {outfile:?}");
                     imwrite(outfile.to_str().unwrap(), &img, &Vector::new()).unwrap();
+                    eprintln!("done: writing {outfile:?}");
                 }
             }
         }
