@@ -1,5 +1,5 @@
 #![feature(let_chains)]
-use opencv::core::{_InputOutputArray, no_array, Rect};
+use opencv::core::{_InputOutputArray, no_array, AlgorithmHint, Rect};
 use opencv::imgcodecs::{imread, ImreadModes};
 use opencv::imgproc::{cvt_color, match_shapes, ColorConversionCodes, ShapeMatchModes};
 use opencv::prelude::*;
@@ -50,6 +50,7 @@ impl Matcher {
             &mut gs_roi,
             ColorConversionCodes::COLOR_BGR2GRAY as i32,
             0,
+            AlgorithmHint::ALGO_HINT_DEFAULT,
         )?;
         match_shapes(&self.tmpl, &gs_roi, self.match_method as i32, 0.0)
     }

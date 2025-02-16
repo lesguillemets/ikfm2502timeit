@@ -1,6 +1,6 @@
 use crate::consts;
 
-use opencv::core::{sum_elems, CmpTypes, Rect};
+use opencv::core::{sum_elems, AlgorithmHint, CmpTypes, Rect};
 use opencv::imgcodecs::{imread, ImreadModes};
 use opencv::imgproc::{cvt_color, threshold, ColorConversionCodes, ThresholdTypes};
 use opencv::prelude::*;
@@ -51,6 +51,7 @@ impl BWMatcher {
             &mut gs_roi,
             ColorConversionCodes::COLOR_BGR2GRAY as i32,
             0,
+            AlgorithmHint::ALGO_HINT_DEFAULT,
         )?;
         // frame の roi は結局2値化されてここに入る
         let mut bw_roi = Mat::default();
