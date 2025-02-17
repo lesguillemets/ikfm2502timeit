@@ -35,7 +35,7 @@ pub fn load_video(f: &str) -> Result<(VideoCapture, usize), LoadVideoError> {
 
 pub fn load_report(f: &str) -> Option<VideoCapture> {
     match load_video(f) {
-        Ok((mut vc, frame_count)) => {
+        Ok((vc, frame_count)) => {
             eprintln!("ready to process video with {frame_count} frames");
             Some(vc)
         }

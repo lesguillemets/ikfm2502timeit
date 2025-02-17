@@ -1,4 +1,4 @@
-use clap::{ArgGroup, Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use glob::glob;
 use ikfm2502timeit::consts;
 use ikfm2502timeit::extract::get_nth_frames;

@@ -6,7 +6,6 @@ use opencv::prelude::*;
 use opencv::videoio::VideoCapture;
 
 use crate::consts;
-use crate::load::load_report;
 
 #[derive(Debug)]
 pub enum FindFramesError {
