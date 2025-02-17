@@ -5,7 +5,7 @@ use ikfm2502timeit::extract::get_nth_frames;
 use ikfm2502timeit::load::load_report;
 use ikfm2502timeit::match_bw;
 use ikfm2502timeit::prepare::prepare;
-use ikfm2502timeit::Spans;
+use ikfm2502timeit::SimpleSpans;
 use opencv::core::Vector;
 use opencv::imgcodecs::imwrite;
 use opencv::videoio::VideoCapture;
@@ -89,7 +89,7 @@ fn main() -> ExitCode {
             }
             Commands::Process => {
                 let frames = match_bw::do_find_frames(vc, &None);
-                let spans = Spans::from_bools(&frames);
+                let spans = SimpleSpans::from_bools(&frames);
                 let outname = to_bw_filename(file_name);
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
@@ -107,7 +107,7 @@ fn main() -> ExitCode {
                     fs::create_dir(out_dir).unwrap();
                 }
                 // ここにフレームを書き込むようにするわけですね．
-                let parsed = Spans::from_file(&to_bw_filename(file_name)).unwrap();
+                let parsed = SimpleSpans::from_file(&to_bw_filename(file_name)).unwrap();
                 let frames: Vec<usize> = parsed
                     .endframes()
                     .iter()
