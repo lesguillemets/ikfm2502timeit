@@ -6,6 +6,7 @@ use std::io::{BufRead, BufReader, Write};
 pub mod consts;
 pub mod extract;
 pub mod find_frames;
+pub mod follow_clicks;
 pub mod load;
 pub mod match_bw;
 pub mod prepare;
