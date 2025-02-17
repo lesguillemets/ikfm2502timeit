@@ -2,7 +2,6 @@ use clap::{Args, Parser, Subcommand};
 use glob::glob;
 use ikfm2502timeit::consts;
 use ikfm2502timeit::extract::get_nth_frames;
-use ikfm2502timeit::find_frames::do_find_frames;
 use ikfm2502timeit::load::load_report;
 use ikfm2502timeit::match_bw;
 use ikfm2502timeit::prepare::prepare;
@@ -44,10 +43,7 @@ enum Commands {
         #[arg(long)]
         sec: f64,
     },
-    Process {
-        #[arg(long)]
-        use_match_shapes: bool,
-    },
+    Process,
 
     ExtractTrials {
         #[arg(long)]
@@ -91,18 +87,10 @@ fn main() -> ExitCode {
             Commands::Prepare { sec } => {
                 prepare(vc, *sec);
             }
-            Commands::Process { use_match_shapes } => {
-                let frames = if *use_match_shapes {
-                    do_find_frames(vc, &None)
-                } else {
-                    match_bw::do_find_frames(vc, &None)
-                };
+            Commands::Process => {
+                let frames = match_bw::do_find_frames(vc, &None);
                 let spans = Spans::from_bools(&frames);
-                let outname = if *use_match_shapes {
-                    format!("{}.ms.result.csv", &file_name)
-                } else {
-                    to_bw_filename(file_name)
-                };
+                let outname = to_bw_filename(file_name);
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
                 f.flush().unwrap();
