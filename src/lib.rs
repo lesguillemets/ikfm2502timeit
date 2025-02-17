@@ -12,15 +12,17 @@ pub mod match_bw;
 pub mod prepare;
 
 #[derive(Debug)]
-pub struct Span {
+pub struct Span<T: std::fmt::Debug + Clone> {
+    val: T,
     from: usize,
     to: usize,
 }
 
-impl Span {
+impl Span<()> {
     pub fn from_line(line: &str) -> Self {
         let dat: Vec<&str> = line.split(",").collect();
         Span {
+            val: (),
             from: dat[1].parse().unwrap(),
             to: dat[2].parse().unwrap(),
         }
@@ -28,11 +30,11 @@ impl Span {
 }
 
 #[derive(Debug)]
-pub struct Spans {
-    dat: Vec<Span>,
+pub struct Spans<T: std::fmt::Debug + Clone> {
+    dat: Vec<Span<T>>,
 }
 
-impl Spans {
+impl Spans<()> {
     pub fn report<W: Write>(&self, mut paper: &mut W, fps: f64, sep: Option<&str>) {
         let sep = sep.unwrap_or(",");
         writeln!(
@@ -77,6 +79,7 @@ impl Spans {
                 // span の終わり
                 (true, false) => {
                     spans.push(Span {
+                        val: (),
                         from: last_index,
                         to: i - 1,
                     });
@@ -95,6 +98,7 @@ impl Spans {
         if current {
             spans.push({
                 Span {
+                    val: (),
                     from: last_index,
                     to: from.len(),
                 }
