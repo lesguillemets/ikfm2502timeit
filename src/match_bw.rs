@@ -2,7 +2,7 @@ use crate::consts;
 
 use opencv::core::{sum_elems, CmpTypes, Rect};
 use opencv::imgcodecs::{imread, ImreadModes};
-use opencv::imgproc::{cvt_color, threshold, ColorConversionCodes, ThresholdTypes};
+use opencv::imgproc::{cvt_color_def, threshold, ColorConversionCodes, ThresholdTypes};
 use opencv::prelude::*;
 use opencv::videoio::VideoCapture;
 
@@ -46,11 +46,10 @@ impl BWMatcher {
             },
         )?;
         let mut gs_roi = Mat::default();
-        cvt_color(
+        cvt_color_def(
             &roi,
             &mut gs_roi,
             ColorConversionCodes::COLOR_BGR2GRAY as i32,
-            0,
         )?;
         // frame の roi は結局2値化されてここに入る
         let mut bw_roi = Mat::default();

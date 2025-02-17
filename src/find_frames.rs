@@ -1,7 +1,7 @@
 #![feature(let_chains)]
 use opencv::core::{_InputOutputArray, no_array, Rect};
 use opencv::imgcodecs::{imread, ImreadModes};
-use opencv::imgproc::{cvt_color, match_shapes, ColorConversionCodes, ShapeMatchModes};
+use opencv::imgproc::{cvt_color_def, match_shapes, ColorConversionCodes, ShapeMatchModes};
 use opencv::prelude::*;
 use opencv::videoio::VideoCapture;
 
@@ -45,11 +45,10 @@ impl Matcher {
             },
         )?;
         let mut gs_roi = Mat::default();
-        cvt_color(
+        cvt_color_def(
             &roi,
             &mut gs_roi,
             ColorConversionCodes::COLOR_BGR2GRAY as i32,
-            0,
         )?;
         match_shapes(&self.tmpl, &gs_roi, self.match_method as i32, 0.0)
     }
