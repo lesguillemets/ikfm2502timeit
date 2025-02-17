@@ -10,7 +10,7 @@ use crate::consts::{GRID_CENTRE_SIZE, GRID_PADDING, GRID_SIZE, GRID_TOPLEFT_X, G
 //      ├───┴───┴
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-/// 見たまま，長方形領域．
+/// 見たまま，（画像の中の）長方形領域．
 pub struct Sq {
     x: i32,
     y: i32,
@@ -18,7 +18,7 @@ pub struct Sq {
     h: i32,
 }
 
-/// 上の数え方で (x,y) のグリッドの中心部の座標
+/// 上の数え方で (x,y) のグリッドの中心部の座標を得る
 pub fn grid_at(x: i32, y: i32) -> Sq {
     Sq {
         x: GRID_TOPLEFT_X + GRID_SIZE * x + GRID_PADDING,
@@ -26,4 +26,31 @@ pub fn grid_at(x: i32, y: i32) -> Sq {
         w: GRID_CENTRE_SIZE,
         h: GRID_CENTRE_SIZE,
     }
+}
+
+type Frame = u32;
+
+pub struct GridLoc {
+    x: i8,
+    y: i8,
+}
+
+impl GridLoc {
+    fn from_coordinate(i: u8, j: u8) -> Self {
+        GridLoc {
+            x: i as i8 - 4,
+            y: j as i8 - 4,
+        }
+    }
+}
+
+/// ある課題での回答
+pub struct Response {
+    /// この課題全体の開始フレーム
+    pub start_frame: Frame,
+    /// この課題全体の終了フレーム
+    pub end_frame: Frame,
+    /// 途中で選んだ座標を含めた回答一覧
+    /// 最初の (0,0) は含まない
+    pub res: Vec<(GridLoc, Frame)>,
 }
