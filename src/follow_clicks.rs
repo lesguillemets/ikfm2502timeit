@@ -1,4 +1,5 @@
 use crate::consts::{GRID_CENTRE_SIZE, GRID_PADDING, GRID_SIZE, GRID_TOPLEFT_X, GRID_TOPLEFT_Y};
+use crate::span::{Span, Spans};
 
 //      x:0   1  ....
 //   y: ┌───┬───┐
@@ -30,6 +31,7 @@ pub fn grid_at(x: i32, y: i32) -> Sq {
 
 type Frame = u32;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GridLoc {
     x: i8,
     y: i8,
@@ -51,6 +53,6 @@ pub struct Response {
     /// この課題全体の終了フレーム
     pub end_frame: Frame,
     /// 途中で選んだ座標を含めた回答一覧
-    /// 最初の (0,0) は含まない
-    pub res: Vec<(GridLoc, Frame)>,
+    /// 最初の (0,0) は含める
+    pub res: Spans<GridLoc>,
 }
