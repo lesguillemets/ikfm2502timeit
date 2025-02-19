@@ -125,7 +125,6 @@ fn is_this_selected(frame: &Mat, x: i32, y: i32) -> bool {
     .unwrap();
     // grayscale にしてて特に絞ってないので， [255.0,0.0,0.0,0.0] みたいに帰ってくる
     let mean = opencv::core::mean(&grayscale_roi, &no_array()).unwrap().0[0];
-    println!("\tmean is {mean}, {x}, {y}");
     mean > 200.0
 }
 
@@ -137,21 +136,52 @@ impl ResGatherer {
 
     fn gather_responses(&self, vc: &mut VideoCapture) -> Responses {
         let mut frame = Mat::default();
-        let mut i = 0;
+        let mut frame_number = 0;
+        let mut index: u32 = 0;
+        let mut is_start_of_trial = true;
+        // 何度目のtrial か，フレーム，そこで選択されたマス
+        let mut selections: Vec<(u32, Frame, GridLoc)> = vec![];
         while let Ok(b) = vc.read(&mut frame)
             && b
         {
+            // 評定画面についてはチェックする
             if self.matcher.does_frame_match(&frame, &None) {
-                println!("frame {i} matches:");
+                if is_start_of_trial {
+                    // ここが trial のはじめなのでそれを記録しておく
+                    index += 1;
+                    is_start_of_trial = false;
+                }
+                // TODO: here it can be made 100x faster
+                let mut selected: Vec<GridLoc> = vec![];
                 for x in 0..=GRID_NUM {
                     for y in 0..=GRID_NUM {
+                        // x,y が選択されてるか
+                        // 選択したフレームだけ全部真っ白になる
                         if is_this_selected(&frame, x as i32, y as i32) {
-                            println!("\tSelected: {x}, {y} frame is {i}")
+                            selected.push(GridLoc::from_coordinate(x, y));
                         }
                     }
                 }
+                if selected.len() == 1 {
+                    // 1マスだけ選択されていて平和
+                    selections.push((index, frame_number, selected[0]));
+                } else {
+                    // 全体が光る，OK 押下直後のはず
+                    assert_eq!(selected.len(), ((GRID_NUM + 1) * (GRID_NUM + 1)).into());
+                    // そうっぽいので，前回選ばれたマスをそのまま使う．
+                    let last_selection = selections[selections.len() - 1];
+                    assert_eq!(last_selection.1 + 1, frame_number); // ちゃんと直前があるよね？
+                    selections.push((index, frame_number, last_selection.2));
+                }
+            } else {
+                // ここは評定画面外．次に評定画面が出てきたら，それはその開始フレームだ
+                is_start_of_trial = true;
             }
-            i += 1;
+            // counting the frame manually
+            frame_number += 1;
+        }
+        for select in selections {
+            println!("{:?}", select);
         }
         Responses { rs: vec![] }
     }
