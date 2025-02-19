@@ -2,6 +2,7 @@ use clap::{Args, Parser, Subcommand};
 use glob::glob;
 use ikfm2502timeit::consts;
 use ikfm2502timeit::extract::get_nth_frames;
+use ikfm2502timeit::follow_clicks::do_follow_clicks;
 use ikfm2502timeit::load::load_report;
 use ikfm2502timeit::match_bw;
 use ikfm2502timeit::prepare::prepare;
@@ -49,6 +50,8 @@ enum Commands {
         #[arg(long)]
         frames_before: usize,
     },
+
+    Gather,
 }
 
 fn to_bw_filename(file_name: &str) -> String {
@@ -119,6 +122,9 @@ fn main() -> ExitCode {
                     imwrite(outfile.to_str().unwrap(), &img, &Vector::new()).unwrap();
                     eprintln!("done: writing {outfile:?}");
                 }
+            }
+            Commands::Gather => {
+                do_follow_clicks(vc);
             }
         }
     }

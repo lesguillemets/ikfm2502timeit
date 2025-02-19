@@ -1,7 +1,12 @@
 use std::io::{BufRead, BufReader, Write};
 
+use opencv::core::{no_array, Rect};
+use opencv::imgproc::{cvt_color_def, ColorConversionCodes};
+use opencv::prelude::*;
+use opencv::videoio::VideoCapture;
+
 use crate::consts::{
-    GRID_CENTRE_SIZE, GRID_LEN, GRID_NUM, GRID_PADDING, GRID_TOPLEFT_X, GRID_TOPLEFT_Y,
+    GRID_CENTRE_SIZE, GRID_LEN, GRID_NUM, GRID_PADDING, GRID_TOPLEFT_X, GRID_TOPLEFT_Y, TEMPL_FILE,
 };
 use crate::match_bw::BWMatcher;
 use crate::span::{Span, Spans};
@@ -28,12 +33,22 @@ pub struct Sq {
 
 /// 上の数え方で (x,y) のグリッドの中心部の座標を得る
 /// [0, 8]
-pub fn grid_at(x: i32, y: i32) -> Sq {
-    Sq {
-        x: GRID_TOPLEFT_X + GRID_LEN * x + GRID_PADDING,
-        y: GRID_TOPLEFT_Y + GRID_LEN * y + GRID_PADDING,
-        w: GRID_CENTRE_SIZE,
-        h: GRID_CENTRE_SIZE,
+impl Sq {
+    pub fn grid_at(x: i32, y: i32) -> Self {
+        Sq {
+            x: GRID_TOPLEFT_X + GRID_LEN * x + GRID_PADDING,
+            y: GRID_TOPLEFT_Y + GRID_LEN * y + GRID_PADDING,
+            w: GRID_CENTRE_SIZE,
+            h: GRID_CENTRE_SIZE,
+        }
+    }
+    pub fn into_rect(self) -> Rect {
+        Rect {
+            x: self.x,
+            y: self.y,
+            width: self.w,
+            height: self.h,
+        }
     }
 }
 
@@ -92,4 +107,43 @@ impl Responses {
             }
         }
     }
+}
+
+pub struct ResGatherer {
+    matcher: BWMatcher,
+}
+
+impl ResGatherer {
+    pub fn from_file(f: &str) -> opencv::Result<Self> {
+        let bwm = BWMatcher::from_file(f)?;
+        Ok(ResGatherer { matcher: bwm })
+    }
+
+    fn gather_responses(&self, vc: &mut VideoCapture) -> Responses {
+        let mut frame = Mat::default();
+        while let Ok(b) = vc.read(&mut frame)
+            && b
+        {
+            if self.matcher.does_frame_match(&frame, &None) {
+                let roi = Mat::roi(&frame, Sq::grid_at(4, 4).into_rect()).expect("do_gather::roi");
+                let mut grayscale_roi = Mat::default();
+                cvt_color_def(
+                    &roi,
+                    &mut grayscale_roi,
+                    ColorConversionCodes::COLOR_BGR2GRAY as i32,
+                )
+                .unwrap();
+                println!(
+                    "{:?}",
+                    opencv::core::mean(&grayscale_roi, &no_array()).unwrap().0
+                );
+            }
+        }
+        Responses { rs: vec![] }
+    }
+}
+
+pub fn do_follow_clicks(vc: &mut VideoCapture) -> () {
+    let gatherer = ResGatherer::from_file(TEMPL_FILE).unwrap_or_else(|_| panic!("dff:matcher"));
+    gatherer.gather_responses(vc);
 }

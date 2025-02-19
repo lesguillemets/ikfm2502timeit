@@ -22,7 +22,7 @@ impl BWMatcher {
         BWMatcher { tmpl }
     }
 
-    fn from_file(f: &str) -> opencv::Result<Self> {
+    pub fn from_file(f: &str) -> opencv::Result<Self> {
         let grayscale = imread(f, ImreadModes::IMREAD_GRAYSCALE as i32)?;
         let mut bw = Mat::default();
         threshold(
@@ -66,7 +66,7 @@ impl BWMatcher {
         sum_elems(&compared).map(|res| res.0[0])
     }
 
-    fn does_frame_match(&self, frame: &Mat, threshold: &Option<f64>) -> bool {
+    pub fn does_frame_match(&self, frame: &Mat, threshold: &Option<f64>) -> bool {
         let score = self
             .check_frame_match(frame)
             .expect("does_frame_match.unwrap");
