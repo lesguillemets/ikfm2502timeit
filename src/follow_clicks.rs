@@ -64,7 +64,7 @@ impl GridLoc {
     fn from_coordinate(i: u8, j: u8) -> Self {
         GridLoc {
             x: i as i8 - (GRID_NUM / 2) as i8,
-            y: j as i8 - (GRID_NUM / 2) as i8,
+            y: (GRID_NUM / 2) as i8 - j as i8,
         }
     }
 }
