@@ -38,3 +38,14 @@ where
         self.dat.len()
     }
 }
+
+impl<T> Spans<T>
+where
+    T: Debug + Clone + Copy + PartialEq + Eq,
+{
+    /// (frame, val) のvec を，連続するものをつなげて
+    /// Spans にする
+    pub fn from_frames(data: &[(usize, T)]) -> Self {
+        Spans { dat: vec![] }
+    }
+}
