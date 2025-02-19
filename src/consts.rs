@@ -26,7 +26,9 @@ pub const GRID_TOPLEFT_Y: i32 = 617;
 /// 気分的には左・上側の辺自体から，右・下側の辺の直前の黒いところまで．
 /// 途中で1px ずれるが，GRID_TOPLEFT_Z + 44*Z (z \in {X,Y}) が
 /// そのグリッドの左上の座標になる
-pub const GRID_SIZE: i32 = 44;
+pub const GRID_LEN: i32 = 44;
+/// 何個あるか
+pub const GRID_NUM: u8 = 8;
 
 /// 実際に個々のグリッドを見に行く際，上左端から
 /// GRID_PADDING だけずらして GRID_CENTRE_SIZE の正方形をとる
