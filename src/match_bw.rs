@@ -66,16 +66,21 @@ impl BWMatcher {
         sum_elems(&compared).map(|res| res.0[0])
     }
 
+    fn does_frame_match(&self, frame: &Mat, threshold: &Option<f64>) -> bool {
+        let score = self
+            .check_frame_match(frame)
+            .expect("does_frame_match.unwrap");
+        score < threshold.unwrap_or(consts::MATCH_BW_THRESHOLD)
+    }
+
     /// true if that frame matches
     fn check_video(&self, vc: &mut VideoCapture, threshold: &Option<f64>) -> Vec<bool> {
         let mut isvas = vec![];
         let mut frame = Mat::default();
-        let threshold = threshold.unwrap_or(consts::MATCH_BW_THRESHOLD);
         while let Ok(b) = vc.read(&mut frame)
             && b
         {
-            let score = self.check_frame_match(&frame).expect("check_frame.unwrap");
-            isvas.push(score < threshold);
+            isvas.push(self.does_frame_match(&frame, threshold));
             frame = Mat::default();
         }
         isvas
