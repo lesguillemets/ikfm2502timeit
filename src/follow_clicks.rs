@@ -87,6 +87,18 @@ pub struct Responses {
 }
 
 impl Responses {
+    fn from_indfrval(selections: &[(u32, Frame, GridLoc)]) -> Self {
+        if selections.is_empty() {
+            return Responses::empty();
+        }
+        let mut results = vec![];
+        Responses { rs: results }
+    }
+
+    fn empty() -> Self {
+        Responses { rs: vec![] }
+    }
+
     /// report the result like
     /// i,start,end,dur,x,y
     /// 1,124,399,{dur},0,0
