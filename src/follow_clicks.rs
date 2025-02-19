@@ -113,6 +113,22 @@ pub struct ResGatherer {
     matcher: BWMatcher,
 }
 
+/// そのまま読み込んだフレーム (frame) に対して，(x,y) が選択されているか？
+fn is_this_selected(frame: &Mat, x: i32, y: i32) -> bool {
+    let roi = Mat::roi(frame, Sq::grid_at(x, y).into_rect()).expect("is_this_selected::roi");
+    let mut grayscale_roi = Mat::default();
+    cvt_color_def(
+        &roi,
+        &mut grayscale_roi,
+        ColorConversionCodes::COLOR_BGR2GRAY as i32,
+    )
+    .unwrap();
+    // grayscale にしてて特に絞ってないので， [255.0,0.0,0.0,0.0] みたいに帰ってくる
+    let mean = opencv::core::mean(&grayscale_roi, &no_array()).unwrap().0[0];
+    println!("\tmean is {mean}, {x}, {y}");
+    mean > 200.0
+}
+
 impl ResGatherer {
     pub fn from_file(f: &str) -> opencv::Result<Self> {
         let bwm = BWMatcher::from_file(f)?;
@@ -121,23 +137,21 @@ impl ResGatherer {
 
     fn gather_responses(&self, vc: &mut VideoCapture) -> Responses {
         let mut frame = Mat::default();
+        let mut i = 0;
         while let Ok(b) = vc.read(&mut frame)
             && b
         {
             if self.matcher.does_frame_match(&frame, &None) {
-                let roi = Mat::roi(&frame, Sq::grid_at(4, 4).into_rect()).expect("do_gather::roi");
-                let mut grayscale_roi = Mat::default();
-                cvt_color_def(
-                    &roi,
-                    &mut grayscale_roi,
-                    ColorConversionCodes::COLOR_BGR2GRAY as i32,
-                )
-                .unwrap();
-                println!(
-                    "{:?}",
-                    opencv::core::mean(&grayscale_roi, &no_array()).unwrap().0
-                );
+                println!("frame {i} matches:");
+                for x in 0..=GRID_NUM {
+                    for y in 0..=GRID_NUM {
+                        if is_this_selected(&frame, x as i32, y as i32) {
+                            println!("\tSelected: {x}, {y} frame is {i}")
+                        }
+                    }
+                }
             }
+            i += 1;
         }
         Responses { rs: vec![] }
     }
