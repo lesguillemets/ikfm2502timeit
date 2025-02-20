@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use crate::base::Frame;
+
 pub trait FromLine {
     fn from_line(line: &str) -> Self;
 }
@@ -8,8 +10,8 @@ pub trait FromLine {
 /// 期間 (from, to) と，その間の値
 pub struct Span<T: Debug + Clone> {
     pub val: T,
-    pub from: usize,
-    pub to: usize,
+    pub from: Frame,
+    pub to: Frame,
 }
 
 #[derive(Debug)]
@@ -27,7 +29,7 @@ impl<T> Spans<T>
 where
     T: Debug + Clone,
 {
-    pub fn endframes(&self) -> Vec<usize> {
+    pub fn endframes(&self) -> Vec<Frame> {
         self.dat.iter().map(|s| s.from).collect()
     }
 
@@ -45,7 +47,7 @@ where
 {
     /// (frame, val) のvec を，連続するものをつなげて
     /// Spans にする
-    pub fn from_frames(data: &[(usize, T)]) -> Self {
+    pub fn from_frames(data: &[(Frame, T)]) -> Self {
         Spans { dat: vec![] }
     }
 }

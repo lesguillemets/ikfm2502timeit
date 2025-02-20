@@ -1,3 +1,4 @@
+pub type Frame = usize;
 
 pub fn group_by<T, U, F>(it: &[T], f: F) -> Vec<Vec<T>>
 where
@@ -22,5 +23,6 @@ where
             last = fi;
         }
     }
+    result.push(current_group);
     result
 }

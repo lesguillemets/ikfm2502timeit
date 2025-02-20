@@ -13,6 +13,7 @@ pub mod match_bw;
 pub mod prepare;
 pub mod span;
 
+use crate::base::Frame;
 use crate::span::{FromLine, Span};
 
 /// 単なる区間
@@ -35,7 +36,7 @@ pub struct SimpleSpans {
 
 impl SimpleSpans {
     // TODO: better structure??
-    pub fn endframes(&self) -> Vec<usize> {
+    pub fn endframes(&self) -> Vec<Frame> {
         self.dat.iter().map(|s| s.0.from).collect()
     }
     pub fn report<W: Write>(&self, mut paper: &mut W, fps: f64, sep: Option<&str>) {
