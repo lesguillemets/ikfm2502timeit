@@ -1,4 +1,5 @@
-use std::io::{BufRead, BufReader, Write};
+use std::fs;
+use std::io::{BufWriter, Write};
 
 use opencv::core::{no_array, Rect};
 use opencv::imgproc::{cvt_color_def, ColorConversionCodes};
@@ -136,6 +137,40 @@ impl Responses {
                 writeln!(&mut paper, "{index},{from},{to},{dur},{x},{y}").unwrap();
             }
         }
+        paper.flush().unwrap();
+    }
+    /// report the response time to the first click
+    /// i,start,end,init_dur,total_dur,first_x,first_y,final_x,final_y,clicks
+    /// i: ith trial
+    /// start: 評定開始
+    /// end: 最初のクリックのフレーム
+    /// init_dur: 初動（最初のクリック）までの長さ
+    /// total_dur: このtrial全体でどれだけかかったか
+    /// first_*: 最初に選んだ点の座標
+    /// final_*: 最終的な点の座標
+    /// clicks: 何回クリックしたか
+    pub fn report_csv_rts<W: Write>(&self, mut paper: &mut W) {
+        writeln!(
+            &mut paper,
+            "i,start,end,init_dur,total_dur,first_x,first_y,final_x,final_y,clicks"
+        )
+        .unwrap();
+        for (i, trial) in self.rs.iter().enumerate() {
+            let index = i + 1;
+            let first_choice = &trial.res[0];
+            let from = first_choice.from;
+            let to = first_choice.to;
+            let init_dur = first_choice.dur();
+            let first_x = first_choice.val.x;
+            let first_y = first_choice.val.y;
+            let final_choice = &trial.res[trial.res.len() - 1];
+            let total_dur = final_choice.to - first_choice.from;
+            let final_x = final_choice.val.x;
+            let final_y = final_choice.val.y;
+            let clicks = trial.res.len() - 1;
+            writeln!(&mut paper, "{index},{from},{to},{init_dur},{total_dur},{first_x},{first_y},{final_x},{final_y},{clicks}").unwrap();
+        }
+        paper.flush().unwrap();
     }
 }
 
@@ -210,15 +245,19 @@ impl ResGatherer {
             // counting the frame manually
             frame_number += 1;
         }
-        let result = Responses::from_indfrval(&selections);
-        for trial in result.rs.iter() {
-            println!("{:?}", trial);
-        }
-        result
+        Responses::from_indfrval(&selections)
     }
 }
 
-pub fn do_follow_clicks(vc: &mut VideoCapture) -> () {
+pub fn do_follow_clicks(vc: &mut VideoCapture, file_name: &str) {
     let gatherer = ResGatherer::from_file(TEMPL_FILE).unwrap_or_else(|_| panic!("dff:matcher"));
-    gatherer.gather_responses(vc);
+    let res = gatherer.gather_responses(vc);
+    let outfile_clicks = format!("{}.clicks.csv", &file_name);
+    let mut f = BufWriter::new(fs::File::create(&outfile_clicks).unwrap());
+    res.report_csv(&mut f);
+    f.flush().unwrap();
+    let outfile_rts = format!("{}.reactiontimes.csv", &file_name);
+    let mut f = BufWriter::new(fs::File::create(&outfile_rts).unwrap());
+    res.report_csv_rts(&mut f);
+    f.flush().unwrap();
 }

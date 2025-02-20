@@ -14,6 +14,12 @@ pub struct Span<T: Debug + Clone> {
     pub to: Frame,
 }
 
+impl<T: Debug + Clone> Span<T> {
+    pub fn dur(&self) -> Frame {
+        self.to - self.from
+    }
+}
+
 #[derive(Debug)]
 pub struct Spans<T: Debug + Clone> {
     dat: Vec<Span<T>>,

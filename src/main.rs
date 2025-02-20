@@ -124,7 +124,7 @@ fn main() -> ExitCode {
                 }
             }
             Commands::Gather => {
-                do_follow_clicks(vc);
+                do_follow_clicks(vc, file_name);
             }
         }
     }
