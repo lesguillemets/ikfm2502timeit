@@ -156,6 +156,10 @@ impl Responses {
         )
         .unwrap();
         for (i, trial) in self.rs.iter().enumerate() {
+            // OK 推す前に録画が終了するケース
+            if trial.res.len() <= 1 {
+                continue;
+            }
             let index = i + 1;
             let start_here = &trial.res[0];
             let from = start_here.from;
