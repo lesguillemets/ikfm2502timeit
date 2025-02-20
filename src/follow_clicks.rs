@@ -157,14 +157,15 @@ impl Responses {
         .unwrap();
         for (i, trial) in self.rs.iter().enumerate() {
             let index = i + 1;
-            let first_choice = &trial.res[0];
-            let from = first_choice.from;
-            let to = first_choice.to;
-            let init_dur = first_choice.dur();
+            let start_here = &trial.res[0];
+            let from = start_here.from;
+            let to = start_here.to;
+            let init_dur = start_here.dur();
+            let first_choice = &trial.res[1];
             let first_x = first_choice.val.x;
             let first_y = first_choice.val.y;
             let final_choice = &trial.res[trial.res.len() - 1];
-            let total_dur = final_choice.to - first_choice.from;
+            let total_dur = final_choice.to - start_here.from;
             let final_x = final_choice.val.x;
             let final_y = final_choice.val.y;
             let clicks = trial.res.len() - 1;
