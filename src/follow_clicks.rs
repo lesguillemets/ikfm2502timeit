@@ -5,6 +5,7 @@ use opencv::imgproc::{cvt_color_def, ColorConversionCodes};
 use opencv::prelude::*;
 use opencv::videoio::VideoCapture;
 
+use crate::base::group_by;
 use crate::consts::{
     GRID_CENTRE_SIZE, GRID_LEN, GRID_NUM, GRID_PADDING, GRID_TOPLEFT_X, GRID_TOPLEFT_Y, TEMPL_FILE,
 };

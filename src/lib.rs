@@ -3,6 +3,7 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 
+pub mod base;
 pub mod consts;
 pub mod extract;
 pub mod find_frames;
