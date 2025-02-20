@@ -75,25 +75,20 @@ fn main() -> ExitCode {
             .collect();
     }
     eprintln!("{files:?}");
-    let mut loaded: Vec<(VideoCapture, String)> = files
+    for (mut vc, file_name) in files
         .iter()
         .zip(files.iter().cloned())
         // ここで video 以外ははじけてると思うんだけど
         .filter_map(|(f, name)| Some((load_report(f)?, name)))
-        .collect();
-    if loaded.is_empty() {
-        eprintln!("no file loaded");
-        return ExitCode::FAILURE;
-    }
-    for (vc, file_name) in &mut loaded {
+    {
         match &cli.command {
             Commands::Prepare { sec } => {
-                prepare(vc, *sec);
+                prepare(&mut vc, *sec);
             }
             Commands::Process => {
-                let frames = match_bw::do_find_frames(vc, &None);
+                let frames = match_bw::do_find_frames(&mut vc, &None);
                 let spans = SimpleSpans::from_bools(&frames);
-                let outname = to_bw_filename(file_name);
+                let outname = to_bw_filename(&file_name);
                 let mut f = BufWriter::new(fs::File::create(&outname).unwrap());
                 spans.report(&mut f, consts::DEFAULT_FPS, None);
                 f.flush().unwrap();
@@ -110,13 +105,13 @@ fn main() -> ExitCode {
                     fs::create_dir(out_dir).unwrap();
                 }
                 // ここにフレームを書き込むようにするわけですね．
-                let parsed = SimpleSpans::from_file(&to_bw_filename(file_name)).unwrap();
+                let parsed = SimpleSpans::from_file(&to_bw_filename(&file_name)).unwrap();
                 let frames: Vec<usize> = parsed
                     .endframes()
                     .iter()
                     .map(|frame| frame - frames_before)
                     .collect();
-                for (frame, img) in get_nth_frames(vc, &frames).unwrap() {
+                for (frame, img) in get_nth_frames(&mut vc, &frames).unwrap() {
                     let outfile = out_dir.join(format!("{base_name}_{frame:05}.jpg"));
                     eprintln!("writing {outfile:?}");
                     imwrite(outfile.to_str().unwrap(), &img, &Vector::new()).unwrap();
@@ -124,7 +119,7 @@ fn main() -> ExitCode {
                 }
             }
             Commands::Gather => {
-                do_follow_clicks(vc, file_name);
+                do_follow_clicks(&mut vc, &file_name);
             }
         }
     }
