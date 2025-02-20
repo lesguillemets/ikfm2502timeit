@@ -3,35 +3,42 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 
+pub mod base;
 pub mod consts;
 pub mod extract;
 pub mod find_frames;
+pub mod follow_clicks;
 pub mod load;
 pub mod match_bw;
 pub mod prepare;
+pub mod span;
 
-#[derive(Debug)]
-pub struct Span {
-    from: usize,
-    to: usize,
-}
+use crate::base::Frame;
+use crate::span::{FromLine, Span};
 
-impl Span {
-    pub fn from_line(line: &str) -> Self {
+/// 単なる区間
+pub struct SimpleSpan(Span<()>);
+
+impl FromLine for SimpleSpan {
+    fn from_line(line: &str) -> Self {
         let dat: Vec<&str> = line.split(",").collect();
-        Span {
+        SimpleSpan(Span {
+            val: (),
             from: dat[1].parse().unwrap(),
             to: dat[2].parse().unwrap(),
-        }
+        })
     }
 }
 
-#[derive(Debug)]
-pub struct Spans {
-    dat: Vec<Span>,
+pub struct SimpleSpans {
+    dat: Vec<SimpleSpan>,
 }
 
-impl Spans {
+impl SimpleSpans {
+    // TODO: better structure??
+    pub fn endframes(&self) -> Vec<Frame> {
+        self.dat.iter().map(|s| s.0.from).collect()
+    }
     pub fn report<W: Write>(&self, mut paper: &mut W, fps: f64, sep: Option<&str>) {
         let sep = sep.unwrap_or(",");
         writeln!(
@@ -39,7 +46,7 @@ impl Spans {
             "i{sep}from{sep}to{sep}from_sec{sep}to_sec{sep}dur_frames{sep}dur_seconds"
         )
         .unwrap();
-        for (i, line) in self.dat.iter().enumerate() {
+        for (i, SimpleSpan(line)) in self.dat.iter().enumerate() {
             let index = i + 1;
             let from = line.from;
             let to = line.to;
@@ -53,20 +60,9 @@ impl Spans {
         }
     }
 
-    pub fn endframes(&self) -> Vec<usize> {
-        self.dat.iter().map(|s| s.from).collect()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.dat.is_empty()
-    }
-    pub fn len(&self) -> usize {
-        self.dat.len()
-    }
-
     pub fn from_bools(from: &[bool]) -> Self {
         if from.is_empty() {
-            return Spans { dat: vec![] };
+            return SimpleSpans { dat: vec![] };
         }
         let mut spans = vec![];
         let mut current = from[0];
@@ -75,10 +71,11 @@ impl Spans {
             match (current, b) {
                 // span の終わり
                 (true, false) => {
-                    spans.push(Span {
+                    spans.push(SimpleSpan(Span {
+                        val: (),
                         from: last_index,
                         to: i - 1,
-                    });
+                    }));
                 }
                 // span のはじまり}
                 (false, true) => {
@@ -93,13 +90,14 @@ impl Spans {
         }
         if current {
             spans.push({
-                Span {
+                SimpleSpan(Span {
+                    val: (),
                     from: last_index,
                     to: from.len(),
-                }
+                })
             })
         }
-        Spans { dat: spans }
+        SimpleSpans { dat: spans }
     }
 
     // FIXME: use Result
@@ -109,8 +107,8 @@ impl Spans {
         let spans = reader
             .lines()
             .skip(1) // header
-            .filter_map(|l| Some(Span::from_line(&l.ok()?)))
+            .filter_map(|l| Some(SimpleSpan::from_line(&l.ok()?)))
             .collect();
-        Some(Spans { dat: spans })
+        Some(SimpleSpans { dat: spans })
     }
 }
