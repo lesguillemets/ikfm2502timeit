@@ -12,7 +12,7 @@ use crate::consts::{
 use crate::match_bw::BWMatcher;
 use crate::span::{Span, Spans};
 
-type Frame = u32;
+type Frame = usize;
 
 //      x:0   1  ....
 //   y: ┌───┬───┐
@@ -70,13 +70,14 @@ impl GridLoc {
     }
 }
 
+#[derive(Debug)]
 /// ある課題での回答
 /// つまり，一つの課題の中でカチカチ動くので，それをまとめたもの
 pub struct TrialResult {
     /// この課題全体の開始フレーム
-    pub start_frame: usize,
+    pub start_frame: Frame,
     /// この課題全体の終了フレーム
-    pub end_frame: usize,
+    pub end_frame: Frame,
     /// 途中で選んだ座標を含めた回答一覧
     /// 最初の (0,0) は含める
     pub res: Vec<Span<GridLoc>>,
@@ -93,6 +94,24 @@ impl Responses {
             return Responses::empty();
         }
         let mut results = vec![];
+        let trials = group_by(selections, |p| p.0);
+        for trial in trials {
+            // この trial のなかでの選択ごとにグループ化
+            let selections = group_by(&trial, |p| p.2);
+            let trial_result = TrialResult {
+                start_frame: trial[0].1,
+                end_frame: trial[trial.len() - 1].1,
+                res: selections
+                    .iter()
+                    .map(|gr| Span {
+                        val: gr[0].2,
+                        from: gr[0].1,
+                        to: gr[gr.len() - 1].1,
+                    })
+                    .collect(),
+            };
+            results.push(trial_result);
+        }
         Responses { rs: results }
     }
 
@@ -193,10 +212,11 @@ impl ResGatherer {
             // counting the frame manually
             frame_number += 1;
         }
-        for select in selections {
-            println!("{:?}", select);
+        let result = Responses::from_indfrval(&selections);
+        for trial in result.rs.iter() {
+            println!("{:?}", trial);
         }
-        Responses { rs: vec![] }
+        result
     }
 }
 
