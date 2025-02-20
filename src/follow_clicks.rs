@@ -11,7 +11,7 @@ use crate::consts::{
     GRID_CENTRE_SIZE, GRID_LEN, GRID_NUM, GRID_PADDING, GRID_TOPLEFT_X, GRID_TOPLEFT_Y, TEMPL_FILE,
 };
 use crate::match_bw::BWMatcher;
-use crate::span::{Span, Spans};
+use crate::span::Span;
 
 //      x:0   1  ....
 //   y: ┌───┬───┐

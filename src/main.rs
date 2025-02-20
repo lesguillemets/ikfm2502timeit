@@ -9,7 +9,6 @@ use ikfm2502timeit::prepare::prepare;
 use ikfm2502timeit::SimpleSpans;
 use opencv::core::Vector;
 use opencv::imgcodecs::imwrite;
-use opencv::videoio::VideoCapture;
 
 use std::fs;
 use std::io::prelude::*;
