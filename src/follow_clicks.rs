@@ -156,16 +156,17 @@ impl Responses {
         )
         .unwrap();
         for (i, trial) in self.rs.iter().enumerate() {
-            // OK 推す前に録画が終了するケース
-            if trial.res.len() <= 1 {
-                continue;
-            }
             let index = i + 1;
             let start_here = &trial.res[0];
             let from = start_here.from;
             let to = start_here.to;
             let init_dur = start_here.dur();
-            let first_choice = &trial.res[1];
+            let first_choice = if trial.res.len() <= 1 {
+                // OK 推す前に録画が終了するケース，あるいは (0,0) をそのまま選ぶケース
+                &trial.res[0]
+            } else {
+                &trial.res[1]
+            };
             let first_x = first_choice.val.x;
             let first_y = first_choice.val.y;
             let final_choice = &trial.res[trial.res.len() - 1];
